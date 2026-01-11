@@ -3,19 +3,18 @@ import {
   ThemeProvider, 
   createTheme, 
   CssBaseline,
-  Box,
-  Grid,
-  Paper
+  Box
 } from '@mui/material';
-import ControlPanel from './components/ControlPanel';
-import PolarChart from './components/PolarChart';
-import InfoPanel from './components/InfoPanel';
+import TopBar from './components/TopBar';
+import Sidebar from './components/Sidebar';
+import ContentArea from './components/ContentArea';
+import PlotArea from './components/PlotArea';
 import { FileSystemService } from './utils/fileSystem';
 import { DataLoader } from './services/dataLoader';
 
-const darkTheme = createTheme({
+const lightTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
       main: '#2196f3',
     },
@@ -23,9 +22,12 @@ const darkTheme = createTheme({
       main: '#4caf50',
     },
     background: {
-      default: '#121212',
-      paper: '#1e1e1e',
+      default: '#d4dce6',
+      paper: '#ffffff',
     },
+  },
+  typography: {
+    fontFamily: '"Segoe UI", "Roboto", "Arial", sans-serif',
   },
 });
 
@@ -34,43 +36,49 @@ function App() {
   const [fileSystem] = useState(() => new FileSystemService());
   const [dataLoader] = useState(() => new DataLoader(fileSystem));
 
-  // State
+  // Project state
+  const [projectFolder, setProjectFolder] = useState(null);
+  const [controlFile, setControlFile] = useState(null);
   const [controlFileLoaded, setControlFileLoaded] = useState(false);
+  
+  // Control file data
   const [vesselInfo, setVesselInfo] = useState(null);
   const [parameterBounds, setParameterBounds] = useState(null);
-  
+  const [representativeDrafts, setRepresentativeDrafts] = useState(null);
+
   // User inputs
   const [parameters, setParameters] = useState({
-    draft: 'scantling',
-    draftAftPeak: 0,
-    draftForePeak: 0,
-    gm: 1.5,
-    heading: 5,
-    speed: 10,
-    maxRollAngle: 15,
-    hs: 5.5,
-    tz: 7.5,
-    waveDirection: 0
+    draft: 'design',
+    draftAftPeak: 10,
+    draftForePeak: 10,
+    gm: 2,
+    heading: 18,
+    speed: 12,
+    maxRollAngle: 20,
+    hs: 5,
+    tz: 10,
+    waveDirection: 130,
+    wavePeriodType: 'tz'
   });
 
-  // Display options
+  // Display state
+  const [activeTab, setActiveTab] = useState('project');
   const [displayMode, setDisplayMode] = useState('continuous');
   const [directionMode, setDirectionMode] = useState('northup');
-
-  // Chart data
   const [chartData, setChartData] = useState(null);
-  const [loadedData, setLoadedData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Saved cases
+  // Cases
   const [savedCases, setSavedCases] = useState([]);
-  const [currentCaseIndex, setCurrentCaseIndex] = useState(-1);
+  const [selectedCase, setSelectedCase] = useState(null);
 
-  // Load control file on startup
+  // Load control file when project is selected
   useEffect(() => {
-    loadControlFile();
-  }, []);
+    if (projectFolder) {
+      loadControlFile();
+    }
+  }, [projectFolder]);
 
   const loadControlFile = async () => {
     try {
@@ -79,6 +87,9 @@ function App() {
         setControlFileLoaded(true);
         setVesselInfo(result.vesselInfo);
         setParameterBounds(result.parameterBounds);
+        setRepresentativeDrafts(result.representativeDrafts);
+        setControlFile('proll.ctl');
+        setActiveTab('userdata');
       } else {
         setError('Failed to load control file');
       }
@@ -87,202 +98,96 @@ function App() {
     }
   };
 
-  const handleLoadData = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Step 3: Search database for matching file
-      const filePath = dataLoader.findDataFile(parameters);
-      
-      // Step 4: Read binary data
-      const result = await dataLoader.loadPolarData(filePath, parameters);
-      
-      if (result.success) {
-        setLoadedData(result);
-        
-        // Step 5: Prepare data for plotting
-        const prepared = prepareChartData(result.data, parameters);
-        setChartData(prepared);
-      } else {
-        setError(result.error || 'Failed to load data');
-      }
-    } catch (err) {
-      setError(`Error: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
+  const handleProjectFolderSelect = () => {
+    setProjectFolder('raw');
   };
 
-  const prepareChartData = (data, params) => {
-    // Convert vessel coordinates to display coordinates
-    const displayAngles = data.headings.map(beta => {
-      let angle;
-      if (directionMode === 'northup') {
-        angle = 180 + (params.heading - beta);
-      } else {
-        angle = 180 - beta;
-      }
-      
-      while (angle < 0) angle += 360;
-      while (angle >= 360) angle -= 360;
-      
-      return angle;
-    });
-
-    // Calculate wave direction for display
-    let waveDisplayAngle;
-    if (directionMode === 'northup') {
-      waveDisplayAngle = params.waveDirection;
-    } else {
-      waveDisplayAngle = params.waveDirection - params.heading;
-      while (waveDisplayAngle < 0) waveDisplayAngle += 360;
-      while (waveDisplayAngle >= 360) waveDisplayAngle -= 360;
-    }
-
-    return {
-      angles: displayAngles,
-      speeds: data.speeds,
-      rollMatrix: data.rollMatrix,
-      maxRoll: params.maxRollAngle,
-      mode: displayMode,
-      directionMode: directionMode,
-      vesselHeading: params.heading,
-      vesselSpeed: params.speed,
-      waveDirection: waveDisplayAngle
-    };
-  };
-
-  const handleDisplayModeChange = (mode) => {
-    setDisplayMode(mode);
-    if (loadedData) {
-      const prepared = prepareChartData(loadedData.data, parameters);
-      setChartData(prepared);
-    }
-  };
-
-  const handleDirectionModeChange = (mode) => {
-    setDirectionMode(mode);
-    if (loadedData) {
-      const prepared = prepareChartData(loadedData.data, parameters);
-      setChartData(prepared);
-    }
-  };
-
-  const handleSaveCase = () => {
-    const newCase = {
-      id: `Case ${savedCases.length + 1}`,
-      parameters: { ...parameters },
-      data: loadedData,
-      chartData: chartData,
-      timestamp: new Date().toISOString()
-    };
-    
-    setSavedCases([...savedCases, newCase]);
-    setCurrentCaseIndex(savedCases.length);
-  };
-
-  const handleLoadCase = (index) => {
-    if (index >= 0 && index < savedCases.length) {
-      const savedCase = savedCases[index];
-      setParameters(savedCase.parameters);
-      setLoadedData(savedCase.data);
-      setChartData(savedCase.chartData);
-      setCurrentCaseIndex(index);
-    }
-  };
-
-  const handleDeleteCase = (index) => {
-    const newCases = savedCases.filter((_, i) => i !== index);
-    setSavedCases(newCases);
-    if (currentCaseIndex === index) {
-      setCurrentCaseIndex(-1);
-      setChartData(null);
-      setLoadedData(null);
-    } else if (currentCaseIndex > index) {
-      setCurrentCaseIndex(currentCaseIndex - 1);
-    }
-  };
-
-  const handleExportReport = async () => {
-    // Step 8: Generate PDF report
-    try {
-      // Implementation for PDF export
-      console.log('Exporting report...');
-    } catch (err) {
-      setError(`Export failed: ${err.message}`);
-    }
+  const handleControlFileSelect = () => {
+    loadControlFile();
   };
 
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={lightTheme}>
       <CssBaseline />
       <Box sx={{ 
-        height: '100vh', 
-        overflow: 'hidden',
-        bgcolor: 'background.default',
-        p: 2
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: '#d4dce6',
+        overflow: 'hidden'
       }}>
-        <Grid container spacing={2} sx={{ height: '100%' }}>
-          {/* Left Panel - Controls */}
-          <Grid item xs={12} md={3} lg={2.5} sx={{ 
-            height: '100%',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <ControlPanel
-              parameters={parameters}
-              setParameters={setParameters}
-              vesselInfo={vesselInfo}
-              parameterBounds={parameterBounds}
-              displayMode={displayMode}
-              directionMode={directionMode}
-              onDisplayModeChange={handleDisplayModeChange}
-              onDirectionModeChange={handleDirectionModeChange}
-              onLoadData={handleLoadData}
-              onSaveCase={handleSaveCase}
-              onExportReport={handleExportReport}
-              loading={loading}
-              hasData={chartData !== null}
-              savedCases={savedCases}
-              currentCaseIndex={currentCaseIndex}
-              onLoadCase={handleLoadCase}
-              onDeleteCase={handleDeleteCase}
-              controlFileLoaded={controlFileLoaded}
-            />
-          </Grid>
+        {/* Top Bar */}
+        <TopBar
+          projectFolder={projectFolder}
+          controlFile={controlFile}
+          onProjectFolderSelect={handleProjectFolderSelect}
+          onControlFileSelect={handleControlFileSelect}
+          vesselInfo={vesselInfo}
+        />
 
-          {/* Center Panel - Chart */}
-          <Grid item xs={12} md={6} lg={7}>
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                height: '100%', 
-                bgcolor: 'background.paper',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              <PolarChart
+        {/* Main Content - Sidebar + Content + Plot */}
+        <Box sx={{ 
+          flex: 1,
+          display: 'flex',
+          overflow: 'hidden',
+          minHeight: 0
+        }}>
+          {/* Left Sidebar */}
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            controlFileLoaded={controlFileLoaded}
+          />
+
+          {/* Main Area - Content + Plot with Bottom Bar */}
+          <Box sx={{ 
+            flex: 1,
+            display: 'flex',
+            gap: 2.5,
+            p: 2.5,
+            minHeight: 0,
+            overflow: 'hidden'
+          }}>
+            {/* Content Area - Left side (narrower) */}
+            <Box sx={{ 
+              width: '27%',
+              minWidth: '300px',
+              maxWidth: '380px',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <ContentArea
+                activeTab={activeTab}
+                parameters={parameters}
+                setParameters={setParameters}
+                vesselInfo={vesselInfo}
+                parameterBounds={parameterBounds}
+                representativeDrafts={representativeDrafts}
+                displayMode={displayMode}
+                setDisplayMode={setDisplayMode}
+                directionMode={directionMode}
+                setDirectionMode={setDirectionMode}
+                controlFileLoaded={controlFileLoaded}
+              />
+            </Box>
+
+            {/* Plot Area - Right side (wider) with its own bottom bar */}
+            <Box sx={{ flex: 1, display: 'flex', minHeight: 0 }}>
+              <PlotArea
+                parameters={parameters}
                 chartData={chartData}
                 loading={loading}
                 error={error}
+                displayMode={displayMode}
+                directionMode={directionMode}
                 savedCases={savedCases}
-                currentCaseIndex={currentCaseIndex}
-                onLoadCase={handleLoadCase}
+                setSavedCases={setSavedCases}
+                selectedCase={selectedCase}
+                setSelectedCase={setSelectedCase}
               />
-            </Paper>
-          </Grid>
-
-          {/* Right Panel - Info */}
-          <Grid item xs={12} md={3} lg={2.5}>
-            <InfoPanel
-              loadedData={loadedData}
-              parameters={parameters}
-            />
-          </Grid>
-        </Grid>
+            </Box>
+          </Box>
+        </Box>
       </Box>
     </ThemeProvider>
   );
