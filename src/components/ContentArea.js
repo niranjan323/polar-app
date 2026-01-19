@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -14,10 +14,13 @@ import {
   FormControlLabel,
   FormLabel,
   Divider,
-  Grid
+  Grid,
+  Button,
+  IconButton
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function ContentArea({
   activeTab,
@@ -30,8 +33,14 @@ export default function ContentArea({
   setDisplayMode,
   directionMode,
   setDirectionMode,
-  controlFileLoaded
+  controlFileLoaded,
+  savedCases = [],
+  setSavedCases = () => {},
+  selectedCase = null,
+  setSelectedCase = () => {}
 }) {
+  const [caseId, setCaseId] = useState('');
+  const [caseToDelete, setCaseToDelete] = useState('');
   
   if (activeTab === 'project') {
     return (
@@ -41,13 +50,15 @@ export default function ContentArea({
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        bgcolor: 'white'
+        bgcolor: 'white',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        borderRadius: '2px'
       }}>
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#333' }}>
             Welcome to Polar Response Visualization
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontSize: '0.9rem' }}>
             Please select a project folder and load the control file to begin.
           </Typography>
         </Box>
@@ -76,8 +87,8 @@ export default function ContentArea({
 
   const ValidationIcon = ({ isValid }) => (
     isValid ? 
-      <CheckCircleIcon sx={{ color: '#2ecc71', fontSize: 22 }} /> : 
-      <CancelIcon sx={{ color: '#e74c3c', fontSize: 22 }} />
+      <CheckCircleIcon sx={{ color: '#2ecc71', fontSize: 20 }} /> : 
+      <CancelIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
   );
 
   const InputField = ({ label, field, step, helperText }) => {
@@ -96,14 +107,18 @@ export default function ContentArea({
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
               borderColor: isValid ? '#2ecc71' : '#e74c3c',
-              borderWidth: 2,
+              borderWidth: '1.5px',
             },
             '&:hover fieldset': {
               borderColor: isValid ? '#27ae60' : '#c0392b',
             },
             '&.Mui-focused fieldset': {
               borderColor: isValid ? '#2ecc71' : '#e74c3c',
+              borderWidth: '1.5px',
             }
+          },
+          '& .MuiInputBase-root': {
+            fontSize: '0.9rem'
           }
         }}
         InputProps={{
@@ -115,7 +130,7 @@ export default function ContentArea({
         }}
         helperText={helperText}
         FormHelperTextProps={{
-          sx: { fontSize: '0.7rem', color: 'text.secondary' }
+          sx: { fontSize: '0.75rem', color: 'text.secondary' }
         }}
       />
     );
@@ -128,36 +143,40 @@ export default function ContentArea({
       bgcolor: 'white',
       display: 'flex',
       flexDirection: 'column',
-      minHeight: 0
+      minHeight: 0,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      borderRadius: '2px'
     }}>
-      {/* Simple Header - NO blue background */}
+      {/* Header */}
       <Box sx={{ 
-        px: 2.5, 
-        py: 1.5, 
-        borderBottom: '1px solid #e0e0e0',
-        bgcolor: '#fafafa'
+        px: 1.5, 
+        py: 1.2, 
+        borderBottom: '2px solid #d0d0d0',
+        bgcolor: '#f5f5f5',
+        flexShrink: 0
       }}>
-        <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
+        <Box sx={{ fontSize: '1rem', fontWeight: 700, color: '#1e4976', mb: 0.3 }}>
           Vessel Operation Conditions
-        </Typography>
+        </Box>
         {vesselInfo && (
-          <Typography variant="caption" color="text.secondary">
+          <Box sx={{ fontSize: '0.75rem', color: '#999' }}>
             IMO: {vesselInfo.imo}
-          </Typography>
+          </Box>
         )}
       </Box>
 
       {/* Content */}
       <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
-        <Grid container spacing={1.5}>
+        <Grid container spacing={1.2}>
           {/* Draft Category */}
           <Grid item xs={12}>
             <FormControl fullWidth size="small">
-              <InputLabel>Draft Category</InputLabel>
+              <InputLabel sx={{ fontSize: '0.9rem' }}>Draft Category</InputLabel>
               <Select
                 value={parameters.draft}
                 onChange={(e) => handleChange('draft', e.target.value)}
                 label="Draft Category"
+                sx={{ fontSize: '0.9rem' }}
               >
                 <MenuItem value="scantling">Scantling</MenuItem>
                 <MenuItem value="design">Design</MenuItem>
@@ -168,7 +187,7 @@ export default function ContentArea({
 
           {representativeDrafts && (
             <Grid item xs={12}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
                 S:{representativeDrafts.scantling.toFixed(0)}m / 
                 D:{representativeDrafts.design.toFixed(0)}m / 
                 I:{representativeDrafts.intermediate.toFixed(0)}m
@@ -181,7 +200,7 @@ export default function ContentArea({
               label="Draft Aft Peak (m)" 
               field="draftAftPeak" 
               step={0.1}
-              helperText="value range [0, 30]"
+              helperText="[0, 30]"
             />
           </Grid>
 
@@ -190,7 +209,7 @@ export default function ContentArea({
               label="Draft Fore Peak (m)" 
               field="draftForePeak" 
               step={0.1}
-              helperText="value range [0, 30]"
+              helperText="[0, 30]"
             />
           </Grid>
 
@@ -200,7 +219,7 @@ export default function ContentArea({
               field="gm" 
               step={0.5}
               helperText={parameterBounds ? 
-                `value range [${parameterBounds.gmLower}, ${parameterBounds.gmUpper}]` : 
+                `[${parameterBounds.gmLower}, ${parameterBounds.gmUpper}]` : 
                 'Loading...'
               }
             />
@@ -211,7 +230,7 @@ export default function ContentArea({
               label="Heading (degree)" 
               field="heading" 
               step={1}
-              helperText="Clockwise from North to Bow [0, 360]"
+              helperText="[0, 360]"
             />
           </Grid>
 
@@ -220,7 +239,7 @@ export default function ContentArea({
               label="Speed (kn)" 
               field="speed" 
               step={0.5}
-              helperText="value range [0, 30]"
+              helperText="[0, 30]"
             />
           </Grid>
 
@@ -229,7 +248,7 @@ export default function ContentArea({
               label="Max Roll Angle (degree)" 
               field="maxRollAngle" 
               step={1}
-              helperText="value range [0, 30]"
+              helperText="[0, 30]"
             />
           </Grid>
         </Grid>
@@ -237,18 +256,18 @@ export default function ContentArea({
         <Divider sx={{ my: 2 }} />
 
         {/* Sea State */}
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
           Sea State
         </Typography>
 
-        <Grid container spacing={1.5}>
+        <Grid container spacing={1.2}>
           <Grid item xs={12}>
             <InputField 
               label="Hs (m)" 
               field="hs" 
               step={0.5}
               helperText={parameterBounds ? 
-                `value range [${parameterBounds.hsLower}, ${parameterBounds.hsUpper}]` : 
+                `[${parameterBounds.hsLower}, ${parameterBounds.hsUpper}]` : 
                 'Loading...'
               }
             />
@@ -256,11 +275,12 @@ export default function ContentArea({
 
           <Grid item xs={12}>
             <FormControl fullWidth size="small">
-              <InputLabel>Wave Period Type</InputLabel>
+              <InputLabel sx={{ fontSize: '0.9rem' }}>Wave Period Type</InputLabel>
               <Select
                 value={parameters.wavePeriodType}
                 onChange={(e) => handleChange('wavePeriodType', e.target.value)}
                 label="Wave Period Type"
+                sx={{ fontSize: '0.9rem' }}
               >
                 <MenuItem value="tz">Zero Up-crossing, Tz (s)</MenuItem>
                 <MenuItem value="tp_pierson">Peak – Pierson-Moskowitz, Tp (s)</MenuItem>
@@ -277,7 +297,7 @@ export default function ContentArea({
               field="tz" 
               step={0.5}
               helperText={parameterBounds ? 
-                `value range [${parameterBounds.tzLower}, ${parameterBounds.tzUpper}]` : 
+                `[${parameterBounds.tzLower}, ${parameterBounds.tzUpper}]` : 
                 'Loading...'
               }
             />
@@ -288,7 +308,7 @@ export default function ContentArea({
               label="Wave Direction (degree)" 
               field="waveDirection" 
               step={1}
-              helperText="value range [0, 360]"
+              helperText="[0, 360]"
             />
           </Grid>
         </Grid>
@@ -296,54 +316,147 @@ export default function ContentArea({
         <Divider sx={{ my: 2 }} />
 
         {/* Display Options */}
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
           Display Options
         </Typography>
 
         <FormControl component="fieldset" sx={{ mb: 1.5 }}>
-          <FormLabel component="legend" sx={{ fontSize: '0.85rem' }}>Plot Mode</FormLabel>
+          <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333' }}>Plot Mode</FormLabel>
           <RadioGroup
             row
             value={displayMode}
             onChange={(e) => setDisplayMode(e.target.value)}
           >
-            <FormControlLabel value="continuous" control={<Radio size="small" />} label="Continuous" />
-            <FormControlLabel value="trafficlight" control={<Radio size="small" />} label="Traffic Light" />
+            <FormControlLabel 
+              value="continuous" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: '0.85rem' }}>Continuous</Typography>}
+            />
+            <FormControlLabel 
+              value="trafficlight" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: '0.85rem' }}>Traffic Light</Typography>}
+            />
           </RadioGroup>
         </FormControl>
 
         <FormControl component="fieldset">
-          <FormLabel component="legend" sx={{ fontSize: '0.85rem' }}>Direction</FormLabel>
+          <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333' }}>Direction</FormLabel>
           <RadioGroup
             row
             value={directionMode}
             onChange={(e) => setDirectionMode(e.target.value)}
           >
-            <FormControlLabel value="northup" control={<Radio size="small" />} label="North Up" />
-            <FormControlLabel value="headsup" control={<Radio size="small" />} label="Heads Up" />
+            <FormControlLabel 
+              value="northup" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: '0.85rem' }}>North Up</Typography>}
+            />
+            <FormControlLabel 
+              value="headsup" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: '0.85rem' }}>Heads Up</Typography>}
+            />
           </RadioGroup>
         </FormControl>
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Parameter Summary */}
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
-          Case Files
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-            Draft: <strong>{parameters.draft}</strong>
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-            GM: <strong>{parameters.gm}m</strong>
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-            Hs: <strong>{parameters.hs}m</strong>
-          </Typography>
-          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
-            Tp: <strong>{parameters.tz}s</strong>
-          </Typography>
-        </Box>
+        {/* Case Files Section - Only show in User Data Input tab */}
+        {activeTab === 'userdata' && (
+          <>
+            <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
+              Case Files
+            </Typography>
+
+            {/* Save to Case ID Input */}
+            <Box sx={{ mb: 1.5 }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.5, color: '#333' }}>
+                Save to case ID
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Enter case ID"
+                  value={caseId}
+                  onChange={(e) => setCaseId(e.target.value)}
+                  sx={{ fontSize: '0.9rem' }}
+                />
+                <IconButton
+                  size="small"
+                  sx={{ color: '#2ecc71' }}
+                  onClick={() => {
+                    if (caseId.trim()) {
+                      const newCase = {
+                        id: caseId,
+                        draft: parameters.draft,
+                        gm: parameters.gm,
+                        hs: parameters.hs,
+                        tz: parameters.tz,
+                        heading: parameters.heading,
+                        speed: parameters.speed,
+                        waveDirection: parameters.waveDirection,
+                        timestamp: new Date().toLocaleTimeString()
+                      };
+                      setSavedCases([...savedCases, newCase]);
+                      setCaseId('');
+                    }
+                  }}
+                >
+                  <CheckCircleIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            </Box>
+
+            {/* Delete Saved Case Dropdown */}
+            <Box sx={{ mb: 2 }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.5, color: '#333' }}>
+                Delete saved case
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={caseToDelete}
+                    onChange={(e) => setCaseToDelete(e.target.value)}
+                    displayEmpty
+                    sx={{ fontSize: '0.9rem' }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select case to delete
+                    </MenuItem>
+                    {savedCases.map((caseItem) => (
+                      <MenuItem key={caseItem.id} value={caseItem.id}>
+                        {caseItem.id}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <IconButton
+                  size="small"
+                  disabled={!caseToDelete}
+                  sx={{ 
+                    color: '#e74c3c',
+                    '&:disabled': { color: '#ccc' }
+                  }}
+                  onClick={() => {
+                    if (caseToDelete) {
+                      setSavedCases(savedCases.filter(c => c.id !== caseToDelete));
+                      if (selectedCase?.id === caseToDelete) {
+                        setSelectedCase(null);
+                      }
+                      setCaseToDelete('');
+                    }
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 2 }} />
+          </>
+        )}
       </Box>
     </Paper>
   );

@@ -3,12 +3,14 @@ import {
   ThemeProvider, 
   createTheme, 
   CssBaseline,
-  Box
+  Box,
+  Button
 } from '@mui/material';
 import TopBar from './components/TopBar';
 import Sidebar from './components/Sidebar';
 import ContentArea from './components/ContentArea';
 import PlotArea from './components/PlotArea';
+import InitialSetupDialog from './components/InitialSetupDialog';
 import { FileSystemService } from './utils/fileSystem';
 import { DataLoader } from './services/dataLoader';
 
@@ -35,6 +37,10 @@ function App() {
   // Services
   const [fileSystem] = useState(() => new FileSystemService());
   const [dataLoader] = useState(() => new DataLoader(fileSystem));
+
+  // Initial setup state
+  const [showInitialDialog, setShowInitialDialog] = useState(true);
+  const [initialSetupComplete, setInitialSetupComplete] = useState(false);
 
   // Project state
   const [projectFolder, setProjectFolder] = useState(null);
@@ -106,9 +112,25 @@ function App() {
     loadControlFile();
   };
 
+  const handleInitialSetupComplete = (setupData) => {
+    setProjectFolder(setupData.projectFolder);
+    setControlFile(setupData.controlFile);
+    setShowInitialDialog(false);
+    setInitialSetupComplete(true);
+    // Attempt to load the control file
+    loadControlFile();
+  };
+
   return (
     <ThemeProvider theme={lightTheme}>
       <CssBaseline />
+      
+      {/* Initial Setup Dialog */}
+      <InitialSetupDialog
+        open={showInitialDialog}
+        onComplete={handleInitialSetupComplete}
+      />
+
       <Box sx={{ 
         height: '100vh',
         display: 'flex',
@@ -124,6 +146,55 @@ function App() {
           onControlFileSelect={handleControlFileSelect}
           vesselInfo={vesselInfo}
         />
+
+        {/* Tabs Bar */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 1, 
+          padding: '12px 16px',
+          backgroundColor: '#f5f5f5',
+          borderBottom: '2px solid #ddd',
+          height: '48px',
+          alignItems: 'center',
+          justifyContent: 'flex-start'
+        }}>
+          <Button
+            onClick={() => setActiveTab('project')}
+            sx={{
+              padding: '8px 20px',
+              fontSize: '0.9rem',
+              fontWeight: activeTab === 'project' ? 600 : 400,
+              color: activeTab === 'project' ? '#1e4976' : '#666',
+              backgroundColor: activeTab === 'project' ? 'rgba(30, 73, 118, 0.1)' : 'transparent',
+              border: activeTab === 'project' ? '2px solid #1e4976' : '1px solid #ddd',
+              borderRadius: '4px',
+              textTransform: 'capitalize',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 73, 118, 0.05)'
+              }
+            }}
+          >
+            Project
+          </Button>
+          <Button
+            onClick={() => setActiveTab('userdata')}
+            sx={{
+              padding: '8px 20px',
+              fontSize: '0.9rem',
+              fontWeight: activeTab === 'userdata' ? 600 : 400,
+              color: activeTab === 'userdata' ? '#1e4976' : '#666',
+              backgroundColor: activeTab === 'userdata' ? 'rgba(30, 73, 118, 0.1)' : 'transparent',
+              border: activeTab === 'userdata' ? '2px solid #1e4976' : '1px solid #ddd',
+              borderRadius: '4px',
+              textTransform: 'capitalize',
+              '&:hover': {
+                backgroundColor: 'rgba(30, 73, 118, 0.05)'
+              }
+            }}
+          >
+            User Data Input
+          </Button>
+        </Box>
 
         {/* Main Content - Sidebar + Content + Plot */}
         <Box sx={{ 
@@ -143,20 +214,20 @@ function App() {
           <Box sx={{ 
             flex: 1,
             display: 'flex',
-            gap: 2.5,
-            p: 2.5,
+            gap: 2,
+            p: 2,
             minHeight: 0,
             overflow: 'hidden'
           }}>
             {/* Content Area - Left side (narrower) */}
             <Box sx={{ 
-              width: '27%',
-              minWidth: '300px',
-              maxWidth: '380px',
+              width: '28%',
+              minWidth: '320px',
+              maxWidth: '400px',
               display: 'flex',
               flexDirection: 'column'
             }}>
-              <ContentArea
+               <ContentArea
                 activeTab={activeTab}
                 parameters={parameters}
                 setParameters={setParameters}
@@ -168,6 +239,10 @@ function App() {
                 directionMode={directionMode}
                 setDirectionMode={setDirectionMode}
                 controlFileLoaded={controlFileLoaded}
+                savedCases={savedCases}
+                setSavedCases={setSavedCases}
+                selectedCase={selectedCase}
+                setSelectedCase={setSelectedCase}
               />
             </Box>
 

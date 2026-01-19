@@ -9,7 +9,11 @@ import {
   Chip,
   Select,
   MenuItem,
-  FormControl
+  FormControl,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Divider
 } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -232,19 +236,21 @@ export default function PlotArea({
       display: 'flex',
       flexDirection: 'column',
       minHeight: 0,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      borderRadius: '2px'
     }}>
       {/* Header */}
       <Box sx={{ 
-        px: 2.5, 
-        py: 1.5, 
-        borderBottom: '1px solid #e0e0e0',
-        bgcolor: '#fafafa',
+        px: 1.5, 
+        py: 1.2, 
+        borderBottom: '2px solid #d0d0d0',
+        bgcolor: '#f5f5f5',
         flexShrink: 0
       }}>
-        <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
-          Roll Angle
-        </Typography>
+        <Box sx={{ fontSize: '1rem', fontWeight: 700, color: '#1e4976' }}>
+          Roll Angle Diagram
+        </Box>
       </Box>
 
       {/* Chart Area - Scrollable Container */}
@@ -255,11 +261,11 @@ export default function PlotArea({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#f5f5f5',
-        p: 1
+        bgcolor: '#6b7f95',
+        p: 0
       }}>
         {loading ? (
-          <CircularProgress />
+          <CircularProgress sx={{ color: 'white' }} />
         ) : error ? (
           <Typography color="error">{error}</Typography>
         ) : (
@@ -284,143 +290,154 @@ export default function PlotArea({
         )}
       </Box>
 
-      {/* Bottom Bar - Scrollable if needed */}
+      {/* Bottom Bar - Saved Cases List with Generate Report */}
       <Box sx={{ 
-        borderTop: '2px solid #e0e0e0',
+        borderTop: '2px solid #d0d0d0',
         bgcolor: '#f5f5f5',
-        p: 2,
         flexShrink: 0,
-        minHeight: 'auto',
-        overflow: 'auto'
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}>
-        <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-start', minWidth: 'min-content' }}>
-          {/* Save Case Section */}
-          <Box sx={{ minWidth: '200px' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Save to case ID
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="up to 12 characters"
-              value={caseId}
-              onChange={(e) => setCaseId(e.target.value)}
-              inputProps={{ maxLength: 12 }}
-              sx={{ mb: 1, bgcolor: 'white' }}
-            />
-            <Button
-              fullWidth
-              variant="contained"
-              size="small"
-              onClick={handleSaveCase}
-              disabled={!caseId.trim()}
-              sx={{
-                bgcolor: '#e74c3c',
-                '&:hover': { bgcolor: '#c0392b' },
-                textTransform: 'none',
-                fontWeight: 600
-              }}
-            >
-              Save Case
-            </Button>
+        {/* Top Section - Saved Cases */}
+        <Box sx={{ 
+          p: 1.2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          minHeight: '50px',
+          overflow: 'auto'
+        }}>
+          {/* Saved Cases Label */}
+          <Box sx={{ 
+            fontWeight: 700, 
+            fontSize: '0.85rem', 
+            color: '#1e4976',
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            whiteSpace: 'nowrap'
+          }}>
+            Saved Cases:
           </Box>
 
-          {/* Saved Cases List */}
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Saved Cases ({savedCases.length})
-            </Typography>
-            
-            {savedCases.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No saved cases yet
-              </Typography>
-            ) : (
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {savedCases.map((caseItem, index) => (
-                  <Chip
-                    key={index}
-                    icon={
-                      <FiberManualRecordIcon 
-                        sx={{ 
-                          fontSize: 14, 
-                          color: caseItem.isInDangerZone ? '#e74c3c' : '#2ecc71'
-                        }} 
-                      />
+          {/* Saved Cases Chips */}
+          {savedCases.length === 0 ? (
+            <Box sx={{ 
+              color: '#999', 
+              fontSize: '0.85rem',
+              fontStyle: 'italic'
+            }}>
+              No saved cases yet
+            </Box>
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 1, 
+              flexWrap: 'wrap',
+              alignItems: 'center'
+            }}>
+              {savedCases.map((caseItem, index) => (
+                <Box
+                  key={index}
+                  onClick={() => setSelectedCase(caseItem)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '50px',
+                    height: '35px',
+                    backgroundColor: selectedCase?.id === caseItem.id ? '#2196f3' : 'white',
+                    borderRadius: '4px',
+                    border: selectedCase?.id === caseItem.id ? '2px solid #2196f3' : '1px solid #ddd',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    position: 'relative',
+                    '&:hover': {
+                      borderColor: '#2196f3',
+                      boxShadow: '0 2px 6px rgba(33, 150, 243, 0.2)'
                     }
-                    label={caseItem.id}
-                    onClick={() => setSelectedCase(caseItem)}
-                    onDelete={() => handleDeleteCase(caseItem)}
-                    deleteIcon={<DeleteIcon />}
-                    color={selectedCase?.id === caseItem.id ? 'primary' : 'default'}
-                    variant={selectedCase?.id === caseItem.id ? 'filled' : 'outlined'}
-                    sx={{ 
-                      cursor: 'pointer',
-                      fontWeight: selectedCase?.id === caseItem.id ? 600 : 400
+                  }}
+                >
+                  {/* Status Indicator Dot */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: caseItem.isInDangerZone ? '#e74c3c' : '#4caf50'
                     }}
                   />
-                ))}
-              </Box>
-            )}
-          </Box>
-
-          {/* Delete Case Dropdown */}
-          <Box sx={{ minWidth: '180px' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Delete saved case
-            </Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                displayEmpty
-                value=""
-                sx={{ bgcolor: 'white' }}
-              >
-                <MenuItem value="" disabled>
-                  Select a case
-                </MenuItem>
-                {savedCases.map((caseItem, index) => (
-                  <MenuItem 
-                    key={index} 
-                    value={caseItem.id}
-                    onClick={() => handleDeleteCase(caseItem)}
-                  >
+                  <Typography sx={{ 
+                    fontSize: '0.8rem', 
+                    fontWeight: selectedCase?.id === caseItem.id ? 700 : 600,
+                    color: selectedCase?.id === caseItem.id ? 'white' : '#333'
+                  }}>
                     {caseItem.id}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
 
-          {/* Generate Report */}
-          <Box sx={{ minWidth: '220px' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-              Generate report
-            </Typography>
-            <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-              <Select
-                value={reportOption}
-                onChange={(e) => setReportOption(e.target.value)}
-                sx={{ bgcolor: 'white' }}
-              >
-                <MenuItem value="current">current case (default)</MenuItem>
-                <MenuItem value="all">all cases</MenuItem>
-              </Select>
-            </FormControl>
+        {/* Divider Line */}
+        <Divider sx={{ my: 0 }} />
+
+        {/* Bottom Section - Generate Report */}
+        <Box sx={{ 
+          p: 1.2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 1.5,
+          minHeight: '40px'
+        }}>
+          {/* Generate Report Button and Options */}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Button
-              fullWidth
               variant="contained"
               size="small"
               onClick={handleGenerateReport}
               disabled={savedCases.length === 0}
               sx={{
-                bgcolor: '#3498db',
-                '&:hover': { bgcolor: '#2980b9' },
-                textTransform: 'none',
-                fontWeight: 600
+                bgcolor: '#e74c3c',
+                color: 'white',
+                '&:hover': { bgcolor: '#c0392b' },
+                textTransform: 'uppercase',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                px: 1.5,
+                py: 0.6
               }}
             >
-              Generate PDF Report
+              Generate Report
             </Button>
+
+            {/* Report Options - Radio Buttons */}
+            <FormControl size="small">
+              <RadioGroup
+                row
+                value={reportOption}
+                onChange={(e) => setReportOption(e.target.value)}
+                sx={{ gap: 1 }}
+              >
+                <FormControlLabel
+                  value="current"
+                  control={<Radio size="small" />}
+                  label={<Typography sx={{ fontSize: '0.8rem' }}>Current Case</Typography>}
+                  sx={{ m: 0 }}
+                />
+                <FormControlLabel
+                  value="all"
+                  control={<Radio size="small" />}
+                  label={<Typography sx={{ fontSize: '0.8rem' }}>All Cases</Typography>}
+                  sx={{ m: 0 }}
+                />
+              </RadioGroup>
+            </FormControl>
           </Box>
         </Box>
       </Box>
