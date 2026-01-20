@@ -16,13 +16,14 @@ export default function Sidebar({ activeTab, setActiveTab, controlFileLoaded }) 
     <Box 
       sx={{ 
         width: '90px',
-        bgcolor: '#2c5282',
         display: 'flex',
         flexDirection: 'column',
         pt: 2,
         gap: 0.5,
         px: 1,
-        borderRight: '4px solid #1e4976'
+        height: '100vh',
+        justifyContent: 'center',
+        bgcolor: '#fff',
       }}
     >
       {menuItems.map((item) => (
@@ -35,18 +36,17 @@ export default function Sidebar({ activeTab, setActiveTab, controlFileLoaded }) 
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              py: 2.5,
-              px: 1,
-              bgcolor: activeTab === item.id ? '#1e4976' : '#2c5282',
-              color: item.disabled ? 'rgba(255,255,255,0.3)' : 'white',
+              padding: '1rem',
+              bgcolor: activeTab === item.id ? '#FFF' : '#FFF',
+              color: '#626266',
               cursor: item.disabled ? 'not-allowed' : 'pointer',
               borderRadius: '6px',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              borderLeft: activeTab === item.id ? '4px solid #2196f3' : '4px solid transparent',
-              pl: activeTab === item.id ? 'calc(1rem - 4px)' : '1rem',
+              borderLeft: activeTab === item.id ? '2px solid #2196f3' : '2px solid transparent',
+              pl: 'calc(1rem - 4px)',
               boxShadow: activeTab === item.id ? '0 2px 8px rgba(33, 150, 243, 0.25)' : 'none',
               '&:hover': {
-                bgcolor: item.disabled ? '#2c5282' : '#34588c',
+                bgcolor: item.disabled ? '#FFF' : '#FFF',
                 transform: item.disabled ? 'none' : 'translateY(-1px)',
                 boxShadow: item.disabled ? 'none' : '0 4px 12px rgba(0,0,0,0.15)'
               }
@@ -56,7 +56,7 @@ export default function Sidebar({ activeTab, setActiveTab, controlFileLoaded }) 
               sx={{
                 fontSize: '2rem',
                 mb: 0.8,
-                color: activeTab === item.id ? '#2196f3' : 'rgba(255,255,255,0.7)',
+                color: '#626266',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -71,6 +71,7 @@ export default function Sidebar({ activeTab, setActiveTab, controlFileLoaded }) 
                 fontWeight: activeTab === item.id ? 700 : 500,
                 lineHeight: 1.1,
                 color: 'inherit',
+                padding: '0.5rem',
                 textTransform: activeTab === item.id ? 'uppercase' : 'capitalize'
               }}
             >

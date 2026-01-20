@@ -8,13 +8,11 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  InputAdornment,
   Radio,
   RadioGroup,
   FormControlLabel,
   FormLabel,
   Divider,
-  Grid,
   Button,
   IconButton
 } from '@mui/material';
@@ -24,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function ContentArea({
   activeTab,
+  setActiveTab,
   parameters,
   setParameters,
   vesselInfo,
@@ -52,7 +51,7 @@ export default function ContentArea({
         justifyContent: 'center',
         bgcolor: 'white',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderRadius: '2px'
+        borderRadius: '8px'
       }}>
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#333' }}>
@@ -91,287 +90,525 @@ export default function ContentArea({
       <CancelIcon sx={{ color: '#e74c3c', fontSize: 20 }} />
   );
 
-  const InputField = ({ label, field, step, helperText }) => {
+  const InputFieldRow = ({ label, field, step, unit, helper }) => {
     const isValid = validators[field]();
     
     return (
-      <TextField
-        fullWidth
-        size="small"
-        label={label}
-        type="number"
-        value={parameters[field]}
-        onChange={(e) => handleChange(field, parseFloat(e.target.value) || 0)}
-        inputProps={{ step }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            '& fieldset': {
-              borderColor: isValid ? '#2ecc71' : '#e74c3c',
-              borderWidth: '1.5px',
-            },
-            '&:hover fieldset': {
-              borderColor: isValid ? '#27ae60' : '#c0392b',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: isValid ? '#2ecc71' : '#e74c3c',
-              borderWidth: '1.5px',
-            }
-          },
-          '& .MuiInputBase-root': {
-            fontSize: '0.9rem'
-          }
-        }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <ValidationIcon isValid={isValid} />
-            </InputAdornment>
-          ),
-        }}
-        helperText={helperText}
-        FormHelperTextProps={{
-          sx: { fontSize: '0.75rem', color: 'text.secondary' }
-        }}
-      />
+      <Box sx={{ 
+        py: 1.2,
+        px: 2,
+        '&:last-child': {
+          borderBottom: 'none'
+        }
+      }}>
+        {/* Main Row */}
+        <Box sx={{ 
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          mb: 0.5
+        }}>
+          {/* Label */}
+          <Typography sx={{ 
+            fontSize: '0.9rem', 
+            color: '#666',
+            fontWeight: 400,
+            minWidth: '140px'
+          }}>
+            {label}
+          </Typography>
+
+          {/* Validation Icon */}
+          <ValidationIcon isValid={isValid} />
+
+          {/* Input Field Container */}
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+            position: 'relative'
+          }}>
+            <TextField
+              type="number"
+              value={parameters[field]}
+              onChange={(e) => handleChange(field, parseFloat(e.target.value) || 0)}
+              inputProps={{ step, style: { textAlign: 'center', paddingRight: '50px' } }}
+              size="small"
+              sx={{
+                flex: 1,
+                maxWidth: '280px',
+                '& .MuiOutlinedInput-root': {
+                  height: '40px',
+                  borderRadius: '6px',
+                  '& fieldset': {
+                    borderColor: '#ccc',
+                    borderWidth: '1.5px',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#999',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#2196f3',
+                    borderWidth: '1.5px',
+                  }
+                },
+                '& .MuiInputBase-input': {
+                  fontSize: '1rem',
+                  padding: '8px 12px',
+                  color: '#2196f3',
+                  fontWeight: 500
+                }
+              }}
+            />
+            
+            {/* Unit - Positioned inside input field on the right */}
+            <Typography sx={{ 
+              fontSize: '0.75rem', 
+              color: '#ccc',
+              position: 'absolute',
+              right: '12px',
+              fontWeight: 400,
+              pointerEvents: 'none'
+            }}>
+              {unit}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Helper Text */}
+        <Typography sx={{ 
+          fontSize: '0.7rem', 
+          color: '#999',
+          ml: 'auto',
+          mr: 0,
+          textAlign: 'right',
+          mt: 0.5
+        }}>
+          {helper}
+        </Typography>
+      </Box>
     );
   };
 
   return (
     <Paper sx={{ 
       height: '100%', 
-      overflow: 'auto', 
+      overflow: 'hidden',
       bgcolor: 'white',
       display: 'flex',
       flexDirection: 'column',
       minHeight: 0,
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      borderRadius: '2px'
+      borderRadius: '8px'
     }}>
-      {/* Header */}
+      {/* Tab Buttons Header */}
       <Box sx={{ 
-        px: 1.5, 
-        py: 1.2, 
-        borderBottom: '2px solid #d0d0d0',
-        bgcolor: '#f5f5f5',
-        flexShrink: 0
+        px: 2, 
+        py: 1.5,
+        borderBottom: '1px solid #e8e8e8',
+        bgcolor: '#f8f8f8',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 3
       }}>
-        <Box sx={{ fontSize: '1rem', fontWeight: 700, color: '#1e4976', mb: 0.3 }}>
-          Vessel Operation Conditions
-        </Box>
-        {vesselInfo && (
-          <Box sx={{ fontSize: '0.75rem', color: '#999' }}>
-            IMO: {vesselInfo.imo}
-          </Box>
-        )}
+        <Button
+          onClick={() => setActiveTab('project')}
+          sx={{
+            textTransform: 'none',
+            fontSize: '0.95rem',
+            fontWeight: activeTab === 'project' ? 600 : 400,
+            color: activeTab === 'project' ? '#333' : '#999',
+            padding: 0,
+            '&:hover': {
+              backgroundColor: 'transparent'
+            },
+            borderBottom: activeTab === 'project' ? '3px solid #2196f3' : 'none',
+            paddingBottom: 0.5
+          }}
+        >
+          Project
+        </Button>
+        <Button
+          onClick={() => setActiveTab('userdata')}
+          sx={{
+            textTransform: 'none',
+            fontSize: '0.95rem',
+            fontWeight: activeTab === 'userdata' ? 600 : 400,
+            color: activeTab === 'userdata' ? '#2196f3' : '#999',
+            padding: 0,
+            '&:hover': {
+              backgroundColor: 'transparent'
+            },
+            borderBottom: activeTab === 'userdata' ? '3px solid #2196f3' : 'none',
+            paddingBottom: 0.5
+          }}
+        >
+          User Data Input
+        </Button>
       </Box>
 
       {/* Content */}
-      <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
-        <Grid container spacing={1.2}>
-          {/* Draft Category */}
-          <Grid item xs={12}>
-            <FormControl fullWidth size="small">
-              <InputLabel sx={{ fontSize: '0.9rem' }}>Draft Category</InputLabel>
-              <Select
-                value={parameters.draft}
-                onChange={(e) => handleChange('draft', e.target.value)}
-                label="Draft Category"
-                sx={{ fontSize: '0.9rem' }}
-              >
-                <MenuItem value="scantling">Scantling</MenuItem>
-                <MenuItem value="design">Design</MenuItem>
-                <MenuItem value="intermediate">Intermediate</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        
+        {/* Vessel Operation Conditions Title */}
+        <Typography sx={{ 
+          fontSize: '0.95rem', 
+          fontWeight: 600, 
+          color: '#333',
+          px: 2,
+          pt: 2,
+          pb: 1
+        }}>
+          Vessel Operation Conditions
+        </Typography>
 
-          {representativeDrafts && (
-            <Grid item xs={12}>
-              <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
-                S:{representativeDrafts.scantling.toFixed(0)}m / 
-                D:{representativeDrafts.design.toFixed(0)}m / 
-                I:{representativeDrafts.intermediate.toFixed(0)}m
-              </Typography>
-            </Grid>
-          )}
+        {/* Vessel Operation Fields Container */}
+        <Box sx={{
+          mx: 2,
+          mb: 2.5,
+          border: '1px solid #ddd',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          bgcolor: '#fafafa'
+        }}>
+          <InputFieldRow 
+            label="Draft Aft Peak" 
+            field="draftAftPeak" 
+            step={0.1}
+            unit="[m]"
+            helper="value range [000, 000]"
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Draft Aft Peak (m)" 
-              field="draftAftPeak" 
-              step={0.1}
-              helperText="[0, 30]"
-            />
-          </Grid>
+          <InputFieldRow 
+            label="Draft Fore Peak" 
+            field="draftForePeak" 
+            step={0.1}
+            unit="[m]"
+            helper="value range [000, 000]"
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Draft Fore Peak (m)" 
-              field="draftForePeak" 
-              step={0.1}
-              helperText="[0, 30]"
-            />
-          </Grid>
+          <InputFieldRow 
+            label="GM" 
+            field="gm" 
+            step={0.5}
+            unit="[m]"
+            helper={parameterBounds ? `value range [${parameterBounds.gmLower}, ${parameterBounds.gmUpper}]` : "value range [000, 000]"}
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="GM (m)" 
-              field="gm" 
-              step={0.5}
-              helperText={parameterBounds ? 
-                `[${parameterBounds.gmLower}, ${parameterBounds.gmUpper}]` : 
-                'Loading...'
-              }
-            />
-          </Grid>
+          <InputFieldRow 
+            label="Heading" 
+            field="heading" 
+            step={1}
+            unit="[degree]"
+            helper="Clockwise from the North to the Bow - value range [0, 360]"
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Heading (degree)" 
-              field="heading" 
-              step={1}
-              helperText="[0, 360]"
-            />
-          </Grid>
+          <InputFieldRow 
+            label="Speed" 
+            field="speed" 
+            step={0.5}
+            unit="[kn]"
+            helper="value range [000, 000]"
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Speed (kn)" 
-              field="speed" 
-              step={0.5}
-              helperText="[0, 30]"
-            />
-          </Grid>
+          <InputFieldRow 
+            label="Max Allowed Roll" 
+            field="maxRollAngle" 
+            step={1}
+            unit="[degree]"
+            helper="value range [000, 000]"
+          />
+        </Box>
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Max Roll Angle (degree)" 
-              field="maxRollAngle" 
-              step={1}
-              helperText="[0, 30]"
-            />
-          </Grid>
-        </Grid>
+        {/* Draft Category */}
+        <Box sx={{ px: 2, mb: 2.5 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel sx={{ fontSize: '0.9rem' }}>Draft Category</InputLabel>
+            <Select
+              value={parameters.draft}
+              onChange={(e) => handleChange('draft', e.target.value)}
+              label="Draft Category"
+              sx={{ fontSize: '0.9rem' }}
+            >
+              <MenuItem value="scantling">Scantling</MenuItem>
+              <MenuItem value="design">Design</MenuItem>
+              <MenuItem value="intermediate">Intermediate</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-        <Divider sx={{ my: 2 }} />
+        {representativeDrafts && (
+          <Box sx={{ px: 2, mb: 2.5 }}>
+            <Typography sx={{ fontSize: '0.75rem', color: '#999' }}>
+              S:{representativeDrafts.scantling.toFixed(0)}m / 
+              D:{representativeDrafts.design.toFixed(0)}m / 
+              I:{representativeDrafts.intermediate.toFixed(0)}m
+            </Typography>
+          </Box>
+        )}
 
-        {/* Sea State */}
-        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
+        <Divider sx={{ my: 2, mx: 2 }} />
+
+        {/* Sea State Section */}
+        <Typography sx={{ 
+          fontSize: '0.95rem', 
+          fontWeight: 600, 
+          color: '#333',
+          px: 2,
+          pb: 1
+        }}>
           Sea State
         </Typography>
 
-        <Grid container spacing={1.2}>
-          <Grid item xs={12}>
-            <InputField 
-              label="Hs (m)" 
-              field="hs" 
-              step={0.5}
-              helperText={parameterBounds ? 
-                `[${parameterBounds.hsLower}, ${parameterBounds.hsUpper}]` : 
-                'Loading...'
-              }
-            />
-          </Grid>
+        <Box sx={{
+          mx: 2,
+          mb: 2.5,
+          border: '1px solid #ddd',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          bgcolor: '#fafafa'
+        }}>
+          <InputFieldRow 
+            label="Mean Wave Direction" 
+            field="waveDirection" 
+            step={1}
+            unit="[degree]"
+            helper="Clockwise from the North to the coming wave - value range [0, 360]"
+          />
 
-          <Grid item xs={12}>
-            <FormControl fullWidth size="small">
-              <InputLabel sx={{ fontSize: '0.9rem' }}>Wave Period Type</InputLabel>
-              <Select
-                value={parameters.wavePeriodType}
-                onChange={(e) => handleChange('wavePeriodType', e.target.value)}
-                label="Wave Period Type"
-                sx={{ fontSize: '0.9rem' }}
-              >
-                <MenuItem value="tz">Zero Up-crossing, Tz (s)</MenuItem>
-                <MenuItem value="tp_pierson">Peak – Pierson-Moskowitz, Tp (s)</MenuItem>
-                <MenuItem value="tm_pierson">Mean – Pierson-Moskowitz, Tm (s)</MenuItem>
-                <MenuItem value="tp_jonswap">Peak – JONSWAP, Tp (s)</MenuItem>
-                <MenuItem value="tm_jonswap">Mean – JONSWAP, Tm (s)</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+          <InputFieldRow 
+            label="Significant Wave Height" 
+            field="hs" 
+            step={0.5}
+            unit="[m]"
+            helper={parameterBounds ? `value range [${parameterBounds.hsLower}, ${parameterBounds.hsUpper}]` : "value range [000, 000]"}
+          />
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Tz (s)" 
-              field="tz" 
-              step={0.5}
-              helperText={parameterBounds ? 
-                `[${parameterBounds.tzLower}, ${parameterBounds.tzUpper}]` : 
-                'Loading...'
-              }
-            />
-          </Grid>
+          {/* Wave Period Dropdown */}
+          <Box sx={{ 
+            py: 1.2,
+            px: 2,
+            borderBottom: '1px solid #e8e8e8'
+          }}>
+            <Box sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              mb: 0.5
+            }}>
+              <Typography sx={{ 
+                fontSize: '0.9rem', 
+                color: '#2196f3',
+                fontWeight: 400,
+                minWidth: '140px'
+              }}>
+                Wave Period
+              </Typography>
+              
+              <Box />
+              
+              <FormControl size="small" sx={{ flex: 1, maxWidth: '280px' }}>
+                <Select
+                  value={parameters.wavePeriodType}
+                  onChange={(e) => handleChange('wavePeriodType', e.target.value)}
+                  sx={{ 
+                    fontSize: '0.85rem', 
+                    height: '40px', 
+                    borderRadius: '6px',
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#ccc',
+                        borderWidth: '1.5px',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#999',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3',
+                        borderWidth: '1.5px',
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      color: '#2196f3',
+                      fontWeight: 500
+                    }
+                  }}
+                >
+                  <MenuItem value="tz">Zero Up-crossing, Tz</MenuItem>
+                  <MenuItem value="tp_pierson">Peak – Pierson-Moskowitz, Tp</MenuItem>
+                  <MenuItem value="tm_pierson">Mean – Pierson-Moskowitz, Tm</MenuItem>
+                  <MenuItem value="tp_jonswap">Peak – JONSWAP, Tp</MenuItem>
+                  <MenuItem value="tm_jonswap">Mean – JONSWAP, Tm</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
 
-          <Grid item xs={12}>
-            <InputField 
-              label="Wave Direction (degree)" 
-              field="waveDirection" 
-              step={1}
-              helperText="[0, 360]"
-            />
-          </Grid>
-        </Grid>
+          {/* Wave Period Value Input */}
+          <Box sx={{ 
+            py: 1.2,
+            px: 2,
+            borderBottom: 'none'
+          }}>
+            <Box sx={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              mb: 0.5
+            }}>
+              {/* Label */}
+              <Typography sx={{ 
+                fontSize: '0.9rem', 
+                color: '#666',
+                fontWeight: 400,
+                minWidth: '140px'
+              }}>
+                Wave Period
+              </Typography>
 
-        <Divider sx={{ my: 2 }} />
+              {/* Validation Icon */}
+              <ValidationIcon isValid={validators.tz()} />
+
+              {/* Input Field Container */}
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                flex: 1,
+                position: 'relative'
+              }}>
+                <TextField
+                  type="number"
+                  value={parameters.tz}
+                  onChange={(e) => handleChange('tz', parseFloat(e.target.value) || 0)}
+                  inputProps={{ step: 0.5, style: { textAlign: 'center', paddingRight: '50px' } }}
+                  size="small"
+                  sx={{
+                    flex: 1,
+                    maxWidth: '280px',
+                    '& .MuiOutlinedInput-root': {
+                      height: '40px',
+                      borderRadius: '6px',
+                      '& fieldset': {
+                        borderColor: '#ccc',
+                        borderWidth: '1.5px',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#999',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#2196f3',
+                        borderWidth: '1.5px',
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      fontSize: '1rem',
+                      padding: '8px 12px',
+                      color: '#2196f3',
+                      fontWeight: 500
+                    }
+                  }}
+                />
+                
+                {/* Unit - Positioned inside input field on the right */}
+                <Typography sx={{ 
+                  fontSize: '0.75rem', 
+                  color: '#ccc',
+                  position: 'absolute',
+                  right: '12px',
+                  fontWeight: 400,
+                  pointerEvents: 'none'
+                }}>
+                  [s]
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Helper Text */}
+            <Typography sx={{ 
+              fontSize: '0.7rem', 
+              color: '#999',
+              ml: 'auto',
+              mr: 0,
+              textAlign: 'right',
+              mt: 0.5
+            }}>
+              {parameterBounds ? `value range [${parameterBounds.tzLower}, ${parameterBounds.tzUpper}]` : "value range [000, 000]"}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2, mx: 2 }} />
 
         {/* Display Options */}
-        <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
-          Display Options
-        </Typography>
+        <Box sx={{ px: 2 }}>
+          <Typography sx={{ 
+            fontSize: '0.95rem', 
+            fontWeight: 600, 
+            color: '#333',
+            mb: 1.5
+          }}>
+            Display Options
+          </Typography>
 
-        <FormControl component="fieldset" sx={{ mb: 1.5 }}>
-          <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333' }}>Plot Mode</FormLabel>
-          <RadioGroup
-            row
-            value={displayMode}
-            onChange={(e) => setDisplayMode(e.target.value)}
-          >
-            <FormControlLabel 
-              value="continuous" 
-              control={<Radio size="small" />} 
-              label={<Typography sx={{ fontSize: '0.85rem' }}>Continuous</Typography>}
-            />
-            <FormControlLabel 
-              value="trafficlight" 
-              control={<Radio size="small" />} 
-              label={<Typography sx={{ fontSize: '0.85rem' }}>Traffic Light</Typography>}
-            />
-          </RadioGroup>
-        </FormControl>
+          <FormControl component="fieldset" sx={{ mb: 2 }}>
+            <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333', mb: 0.8 }}>Plot Mode</FormLabel>
+            <RadioGroup
+              row
+              value={displayMode}
+              onChange={(e) => setDisplayMode(e.target.value)}
+            >
+              <FormControlLabel 
+                value="continuous" 
+                control={<Radio size="small" />} 
+                label={<Typography sx={{ fontSize: '0.85rem' }}>Continuous</Typography>}
+              />
+              <FormControlLabel 
+                value="trafficlight" 
+                control={<Radio size="small" />} 
+                label={<Typography sx={{ fontSize: '0.85rem' }}>Traffic Light</Typography>}
+              />
+            </RadioGroup>
+          </FormControl>
 
-        <FormControl component="fieldset">
-          <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333' }}>Direction</FormLabel>
-          <RadioGroup
-            row
-            value={directionMode}
-            onChange={(e) => setDirectionMode(e.target.value)}
-          >
-            <FormControlLabel 
-              value="northup" 
-              control={<Radio size="small" />} 
-              label={<Typography sx={{ fontSize: '0.85rem' }}>North Up</Typography>}
-            />
-            <FormControlLabel 
-              value="headsup" 
-              control={<Radio size="small" />} 
-              label={<Typography sx={{ fontSize: '0.85rem' }}>Heads Up</Typography>}
-            />
-          </RadioGroup>
-        </FormControl>
+          <FormControl component="fieldset">
+            <FormLabel component="legend" sx={{ fontSize: '0.85rem', color: '#333', mb: 0.8 }}>Direction</FormLabel>
+            <RadioGroup
+              row
+              value={directionMode}
+              onChange={(e) => setDirectionMode(e.target.value)}
+            >
+              <FormControlLabel 
+                value="northup" 
+                control={<Radio size="small" />} 
+                label={<Typography sx={{ fontSize: '0.85rem' }}>North Up</Typography>}
+              />
+              <FormControlLabel 
+                value="headsup" 
+                control={<Radio size="small" />} 
+                label={<Typography sx={{ fontSize: '0.85rem' }}>Heads Up</Typography>}
+              />
+            </RadioGroup>
+          </FormControl>
+        </Box>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 2, mx: 2 }} />
 
         {/* Case Files Section - Only show in User Data Input tab */}
         {activeTab === 'userdata' && (
-          <>
-            <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, fontSize: '0.95rem', color: '#1e4976' }}>
+          <Box sx={{ px: 2, pb: 2 }}>
+            <Typography sx={{ 
+              fontSize: '0.95rem', 
+              fontWeight: 600, 
+              color: '#333',
+              mb: 1.5
+            }}>
               Case Files
             </Typography>
 
             {/* Save to Case ID Input */}
             <Box sx={{ mb: 1.5 }}>
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.5, color: '#333' }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.8, color: '#333' }}>
                 Save to case ID
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -381,11 +618,18 @@ export default function ContentArea({
                   placeholder="Enter case ID"
                   value={caseId}
                   onChange={(e) => setCaseId(e.target.value)}
-                  sx={{ fontSize: '0.9rem' }}
+                  sx={{ 
+                    fontSize: '0.9rem',
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#ddd',
+                      }
+                    }
+                  }}
                 />
                 <IconButton
                   size="small"
-                  sx={{ color: '#2ecc71' }}
+                  sx={{ color: '#2ecc71', flexShrink: 0 }}
                   onClick={() => {
                     if (caseId.trim()) {
                       const newCase = {
@@ -411,7 +655,7 @@ export default function ContentArea({
 
             {/* Delete Saved Case Dropdown */}
             <Box sx={{ mb: 2 }}>
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.5, color: '#333' }}>
+              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.8, color: '#333' }}>
                 Delete saved case
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -437,7 +681,8 @@ export default function ContentArea({
                   disabled={!caseToDelete}
                   sx={{ 
                     color: '#e74c3c',
-                    '&:disabled': { color: '#ccc' }
+                    '&:disabled': { color: '#ccc' },
+                    flexShrink: 0
                   }}
                   onClick={() => {
                     if (caseToDelete) {
@@ -453,9 +698,7 @@ export default function ContentArea({
                 </IconButton>
               </Box>
             </Box>
-
-            <Divider sx={{ my: 2 }} />
-          </>
+          </Box>
         )}
       </Box>
     </Paper>

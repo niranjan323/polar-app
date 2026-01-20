@@ -148,7 +148,7 @@ function App() {
         />
 
         {/* Tabs Bar */}
-        <Box sx={{ 
+        {/* <Box sx={{ 
           display: 'flex', 
           gap: 1, 
           padding: '12px 16px',
@@ -194,7 +194,7 @@ function App() {
           >
             User Data Input
           </Button>
-        </Box>
+        </Box> */}
 
         {/* Main Content - Sidebar + Content + Plot */}
         <Box sx={{ 
@@ -229,6 +229,7 @@ function App() {
             }}>
                <ContentArea
                 activeTab={activeTab}
+                setActiveTab={setActiveTab}
                 parameters={parameters}
                 setParameters={setParameters}
                 vesselInfo={vesselInfo}
